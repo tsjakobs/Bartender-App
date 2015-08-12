@@ -74,6 +74,20 @@ HTMLDivElement.prototype.append = function(){
 	}
 	element.appendChild(document.createTextNode(arguments[0]));
 }
+HTMLDivElement.prototype.appendObj = function(){
+	var element = document.createElement('div');
+	var obj = arguments[0];
+	function setAttr(id,val){
+		if (id!=undefined && val != undefined){
+			element.setAttribute(id,(element.getAttribute(id)==null?"":element.getAttribute(id)) + " " + val);
+		}
+	}
+	Object.keys(obj).forEach(function(x){
+				setAttr(x,obj[x]);
+			})
+	this.appendChild(element);
+	element.appendChild(document.createTextNode(obj.NAME));
+}
 HTMLDivElement.prototype.newLine = function(){
 	this.appendChild(document.createElement("br"));
 }
@@ -118,6 +132,60 @@ function getRandom() {
 				element.newLine();
 				element.append(instructions);
 			});
+		});
+	});
+}
+
+function getRecipeInfo(caller){
+	var recipeName = caller.getAttribute("NAME");
+	var element = document.getElementById('recipe');
+	element.clear();
+	show('recipe');
+	db.transaction(function(tx){
+		tx.executeSql("SELECT * FROM RECIPE WHERE LOWER(NAME) = LOWER(TRIM(?))", [recipeName], function(tx,results) {
+			var name = "";
+			var instructions = "";
+			var id = "";
+			var ingredients = [];
+			name = results.rows[0].NAME;
+			id = results.rows[0].ID;
+			instructions = results.rows[0].INSTRUCTIONS;
+			tx.executeSql("SELECT QUANTITY, NAME FROM INGREDIENT AS I INNER JOIN ALCOHOL AS A ON I.ALCOHOL_ID = A.ID WHERE RECIPE_ID = "+ id,[],function(tx, results) {
+				var length = results.rows.length
+				for (var i = 0; i < length; i++) {
+					ingredients[i] = results.rows[i];
+				}
+				element.newLine();
+				element.append(name,"h1");
+				element.newLine();
+				element.newLine();
+				element.append("Ingredients","center","h2");
+				for (var i = 0; i < ingredients.length; i++) {
+					element.newLine();
+					if (ingredients[i].QUANTITY != undefined && ingredients[i].QUANTITY!="") {
+						element.append(ingredients[i].QUANTITY + " of ");
+					}
+					element.append(ingredients[i].NAME);
+				}
+				element.newLine();
+				element.newLine();
+				element.append("Instructions","center","h2");
+				element.newLine();
+				element.append(instructions);
+			});
+		});
+	});
+}
+
+function search(text){
+	db.transaction(function(tx) {
+		tx.executeSql('SELECT * FROM RECIPE WHERE NAME LIKE \'%'+text+'%\'',[],function(tx, results){
+			var element = document.getElementById('searchOutput');
+			element.clear();
+			for (var i = 0; i < results.rows.length; i++){
+				element.appendObj({NAME:results.rows[i].NAME,onclick:"getRecipeInfo(this)"});
+				element.newLine();
+			}
 		});
 	});
 }
