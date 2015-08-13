@@ -33,12 +33,82 @@
 <script src="js/bootstrap.min.js"></script>
 <title>Hello World</title>
 </head>
-<body>
-	<div id="main" style="height: 91vh; padding: 1vw;">This is the main screen.</div>
+<body>	
+		<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 id="modalName" class="modal-title">Insert Name Here</h4>
+      </div>
+      <div class="modal-body">
+        <button id="modalFirst" type="button" class="btn btn-default" data-dismiss="modal">View Recipe</button>
+        <button id="modalSecond" type="button" class="btn btn-default" data-dismiss="modal" onclick="alert('To Be Implemented')">Add to Shopping Cart</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+	<div id="main" style="height: 91vh; padding-bottom: 10vh;padding-top:0px;margin-top:0px;">
+	<div>
+		<h2> Current Features</h2>
+		<ul>
+			<li>
+				Can get random recipe from list of all recipes.
+			</li>
+			<li>
+				Can search for either a recipe or an ingredient.
+			</li>
+			<li>
+				Selecting a recipe allows you to view the recipe.
+			</li>
+			<li>
+				Selecting an ingredient allows you to add to Cabinet.
+			</li>	
+			<li>
+				Can view all ingredients in cabinet.
+			</li>
+			<li>
+				Selecting item from Cabinet allows you to remove from cabinet.
+			</li>
+		</ul>
+		<h2> Bugs </h2>
+		<ul>
+			<li>
+				Scrolling is sketchy at best.
+			</li>	
+			<li>
+				Search page has horizontal scrolling.
+			</li>
+		</ul>
+		<h2> Things to Do</h2>
+		<ul>	
+			<li>
+				Make the App look nice.
+			</li>		
+			<li>
+				Determine how the app will decide if it should display only recipes you can make
+				with materials currently in cabinet, or if it should display all recipes.
+			</li>
+			<li>
+				Implement shopping cart.
+			</li>	
+			<li>
+				Implement settings.
+			</li>	
+			<li>
+				Implement help.
+			</li>
+		</ul>
+	</div>
+</div>
 	<div id="recipe" style = "height: 91vh; padding: 1vw; display:none"></div>
-	<div id="search" style="height: 91vh; padding: 1vw; display: none">
+	<div id="search" style="height: 91vh; padding-top:50px; display: none">
 		<nav class="navbar navbar-default navbar-fixed-top">
 			<input type="text" class="form-control" onkeyup="search(this.value);" placeholder="Search for...">
+
 		</nav>
 		<div id="searchOutput">
 		</div>
@@ -66,7 +136,7 @@
 		<div id="Footer" class="container" style="height: 9vh;">
 			<img src="img/search.png" onclick="show('search');" height="90%" />
 			<img src="img/random.png" onclick="show('random');getRandom();" height="90%" />
-			<img src="img/cabinet.png" onclick="show('cabinet');" height="90%" /> 
+			<img src="img/cabinet.png" onclick="show('cabinet');displayCabinet();" height="90%" /> 
 			<img src="img/shopping.png" onclick="show('shopping');" height="90%" /> 
 			<img src="img/settings.png" onclick="show('settings');" height="90%" /> 
 			<img src="img/help.png" onclick="window.location.href = 'test.html';" height="90%" />

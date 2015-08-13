@@ -48,6 +48,7 @@ var app = {
 		}
 };
 var current = "main";
+var selectedOption; //This is a DOM Element with an attribute NAME
 
 function show (showing){	
 	document.getElementById(current).style.display = "none";
@@ -75,11 +76,18 @@ HTMLDivElement.prototype.append = function(){
 	element.appendChild(document.createTextNode(arguments[0]));
 }
 HTMLDivElement.prototype.appendObj = function(){
-	var element = document.createElement('div');
 	var obj = arguments[0];
+	var element = document.createElement(obj.tag);
 	function setAttr(id,val){
 		if (id!=undefined && val != undefined){
-			element.setAttribute(id,(element.getAttribute(id)==null?"":element.getAttribute(id)) + " " + val);
+			if (val.constructor === Array){
+				var counter=0;
+				val.forEach(function(x){
+					setAttr(id,val[counter++]);
+				});
+			} else {
+				element.setAttribute(id,((element.getAttribute(id)==null?"":element.getAttribute(id)) + " " + val).trim());
+			}
 		}
 	}
 	Object.keys(obj).forEach(function(x){
@@ -177,13 +185,76 @@ function getRecipeInfo(caller){
 	});
 }
 
+function setupModal(element){
+	document.getElementById('modalName').textContent = element.getAttribute('NAME');
+	document.getElementById('modalSecond').style.display = 'block';
+	if (element.getAttribute('type') == 'recipe'){
+		document.getElementById("modalFirst").textContent = "View Recipe";
+		document.getElementById("modalFirst").setAttribute("onclick","getRecipeInfo(selectedOption)");
+	} else if (element.getAttribute('type') == 'liquid'){
+		document.getElementById("modalFirst").textContent = "Add to Cabinet";
+		document.getElementById("modalFirst").setAttribute("onclick","addToCabinet(selectedOption)");
+	} else if (element.getAttribute('type') == 'cabinet'){
+		document.getElementById("modalFirst").textContent = "Remove from Shopping List";
+		document.getElementById("modalFirst").setAttribute("onclick","removeFromCabinet(selectedOption)");
+		document.getElementById('modalSecond').style.display = 'none';
+	}
+}
+
+function addToCabinet(element){
+	db.transaction(function(tx) {
+		tx.executeSql('UPDATE ALCOHOL SET OWNED = 1 WHERE LOWER(NAME) = LOWER(\'' + element.getAttribute("NAME")+'\')');
+	});
+}
+function removeFromCabinet(element){
+	db.transaction(function(tx) {
+		tx.executeSql('DELETE FROM ALCOHOL WHERE LOWER(NAME) = LOWER(\'' + element.getAttribute("NAME")+'\')');
+	});
+	displayCabinet();
+}
+function displayCabinet(){
+	var element = document.getElementById('cabinet');
+	element.clear();
+	db.transaction(function(tx){
+		tx.executeSql('SELECT * FROM ALCOHOL WHERE OWNED = 1',[],function(tx,results){
+			for (var i = 0; i < results.rows.length; i++){
+				element.appendObj({	tag:'div',
+									type:'cabinet',
+									NAME:results.rows[i].NAME,
+									class:["btn","btn-info"],
+									onclick:["selectedOption = this;","setupModal(this);"],
+									'data-toggle':"modal",
+									'data-target':"#myModal"});
+				element.newLine();
+			}
+		});
+	});
+}
 function search(text){
+	var element = document.getElementById('searchOutput');
+	element.clear();
 	db.transaction(function(tx) {
 		tx.executeSql('SELECT * FROM RECIPE WHERE NAME LIKE \'%'+text+'%\'',[],function(tx, results){
-			var element = document.getElementById('searchOutput');
-			element.clear();
 			for (var i = 0; i < results.rows.length; i++){
-				element.appendObj({NAME:results.rows[i].NAME,onclick:"getRecipeInfo(this)"});
+				element.appendObj({	tag:'button',
+									type:'recipe',
+									NAME:results.rows[i].NAME,
+									onclick:["selectedOption = this;","setupModal(this);"],
+									class:["btn","btn-info"],
+									'data-toggle':"modal",
+									'data-target':"#myModal"});
+				element.newLine();
+			}
+		});
+		tx.executeSql('SELECT * FROM ALCOHOL WHERE NAME LIKE \'%'+text+'%\'',[],function(tx,results){
+			for (var i = 0; i < results.rows.length; i++){
+				element.appendObj({	tag:'button',
+									type:'liquid',
+									NAME:results.rows[i].NAME,
+									onclick:["selectedOption = this;","setupModal(this);"],
+									class:["btn","btn-info"],
+									'data-toggle':"modal",
+									'data-target':"#myModal"});
 				element.newLine();
 			}
 		});
