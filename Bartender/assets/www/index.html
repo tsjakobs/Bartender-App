@@ -51,7 +51,7 @@
 
   </div>
 </div>
-	<div id="main" style="height: 90%; padding-top:0px;margin-top:0px;">
+	<div id="main" class="main" style="display:block">
 	<div>
 		<h2> Current Features</h2>
 		<ul>
@@ -82,12 +82,6 @@
 		</ul>
 		<h2> Bugs </h2>
 		<ul>
-			<li>
-				Scrolling is sketchy at best.
-			</li>	
-			<li>
-				Search page has horizontal scrolling.
-			</li>
 		</ul>
 		<h2> Things to Do</h2>
 		<ul>	
@@ -122,8 +116,8 @@
 		</ul>
 	</div>
 </div>
-	<div id="recipe" style = "height: 91vh; padding: 1vw; display:none"></div>
-	<div id="search" style="height: 91vh; padding-top:50px; display: none">
+	<div id="recipe" class="main"></div>
+	<div id="search" class="main" style="padding-top:50px;">
 		<nav class="navbar navbar-default navbar-fixed-top">
 			<input type="text" class="form-control" onkeyup="search(this.value);" placeholder="Search for...">
 
@@ -131,7 +125,7 @@
 		<div id="searchOutput">
 		</div>
 	</div>
-	<div id="random" style="height: 91vh; padding: 1vw; display: none">
+	<div id="random" class="main">
 		<br>
 		<h1>(insert drink name here)</h1>
 		<br> <br>
@@ -146,10 +140,10 @@
 		</center>
 		<br> (insert instructions here)
 	</div>
-	<div id="cabinet" style="height: 91vh; padding: 1vw; display: none">This is the cabinet screen.</div>
-	<div id="shopping" style="height: 91vh; padding: 1vw; display: none">This is the shopping screen.</div>
-	<div id="settings" style="height: 91vh; padding: 1vw; display: none">This is the settings screen.</div>
-	<div id="help" style="height: 91vh; padding: 1vw; display: none">This is the help screen.</div>
+	<div id="cabinet" class="main">This is the cabinet screen.</div>
+	<div id="shopping" class="main">This is the shopping screen.</div>
+	<div id="settings" class="main">This is the settings screen.</div>
+	<div id="help" class="main">This is the help screen.</div>
 	<nav class="navbar navbar-default navbar-fixed-bottom">
 		<div id="Footer" class="container" style="height: 9vh;">
 			<img src="img/search.png" onclick="show('search');" height="90%" />

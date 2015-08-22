@@ -44,6 +44,20 @@ body {
     width:100%;
 }
 
+.btn-info{
+		word-wrap: break-word;
+		white-space: normal !important;
+		max-width:100vw;
+}
+
+.main {
+	height: 91vh; 
+	padding-left: 1vw; 
+	padding-right: 1vw;
+	display: none;
+	overflow-y:scroll;
+}
+
 /* Portrait layout (default) */
 .app {
     background:url(../img/logo.png) no-repeat center top; /* 170px x 200px */
