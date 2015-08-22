@@ -48,20 +48,42 @@ var app = {
 		}
 };
 var current = "main";
+var settingKeys = {	coSearch:"Search Recipes Using Only Cabinet Ingredients",
+					coRandom:"Random Using Only Cabinet Ingredients"};
+(setSettings = function(){
+	Object.keys(settingKeys).forEach(function(x){
+		if (localStorage.getItem(settingKeys[x])==null){
+			localStorage.setItem(settingKeys[x],false);
+		}
+	});
+})();
+function getSetting(key){
+	return localStorage.getItem(settingKeys[key]);
+}
 var selectedOption; //This is a DOM Element with an attribute NAME
-
+function showLocal(){
+	var counter = 0;
+	while ((tmp = localStorage.key(counter++))!=null){
+		alert(tmp);
+	}
+}
+function loadSettings(){
+	var counter = 0;
+	var setting = document.getElementById("settings");
+	setting.clear();
+	while ((tmp = localStorage.key(counter++))!=null){
+		setting.append(tmp + ": ");
+		setting.appendObj({tag:"input",type:"checkbox",onclick:"localStorage.setItem('"+tmp+"',this.checked);"}).checked=localStorage.getItem(tmp)=="true";
+		setting.newLine();
+	}
+}
 function show (showing){	
 	document.getElementById(current).style.display = "none";
 	current = showing;
 	document.getElementById(showing).style.display = "block";
 }
-var db = window.openDatabase("myDatabase.db", "1.0", "Proto DB",
-		1000000);
+var db = window.openDatabase("myDatabase.db", "1.0", "Proto DB",1000000);
 
-function append(element, text) {
-	element.appendChild(document.createElement("br"));
-	element.appendChild(document.createTextNode(text));
-}
 HTMLDivElement.prototype.append = function(){
 	if (arguments.length==1)
 		arguments[1]="span";
@@ -95,6 +117,7 @@ HTMLDivElement.prototype.appendObj = function(){
 			})
 	this.appendChild(element);
 	element.appendChild(document.createTextNode(obj.NAME));
+	return element;
 }
 HTMLDivElement.prototype.newLine = function(){
 	this.appendChild(document.createElement("br"));
@@ -111,8 +134,11 @@ function getRandom() {
 	var instructions = "";
 	var id = "";
 	var ingredients = [];
+	var rndSQL = "SELECT * FROM RECIPE";
+	if (getSetting('coRandom')=="true")
+		rndSQL = "SELECT R.* FROM INGREDIENT AS I INNER JOIN ALCOHOL AS A ON I.ALCOHOL_ID = A.ID INNER JOIN RECIPE AS R ON I.RECIPE_ID = R.ID GROUP BY R.ID HAVING COUNT(*) = SUM(A.OWNED);";
 	db.transaction(function(tx) {
-		tx.executeSql('SELECT * FROM RECIPE', [], function(tx,results) {
+		tx.executeSql(rndSQL, [], function(tx,results) {
 			var random = Math.floor(Math.random() * (results.rows.length - 0));
 			name = results.rows[random].NAME;
 			id = results.rows[random].ID;
@@ -195,7 +221,7 @@ function setupModal(element){
 		document.getElementById("modalFirst").textContent = "Add to Cabinet";
 		document.getElementById("modalFirst").setAttribute("onclick","addToCabinet(selectedOption)");
 	} else if (element.getAttribute('type') == 'cabinet'){
-		document.getElementById("modalFirst").textContent = "Remove from Shopping List";
+		document.getElementById("modalFirst").textContent = "Remove from Cabinet List";
 		document.getElementById("modalFirst").setAttribute("onclick","removeFromCabinet(selectedOption)");
 		document.getElementById('modalSecond').style.display = 'none';
 	}
@@ -208,7 +234,7 @@ function addToCabinet(element){
 }
 function removeFromCabinet(element){
 	db.transaction(function(tx) {
-		tx.executeSql('DELETE FROM ALCOHOL WHERE LOWER(NAME) = LOWER(\'' + element.getAttribute("NAME")+'\')');
+		tx.executeSql('UPDATE ALCOHOL SET OWNED = 0 WHERE LOWER(NAME) = LOWER(\'' + element.getAttribute("NAME")+'\')');
 	});
 	displayCabinet();
 }
