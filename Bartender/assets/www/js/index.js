@@ -217,9 +217,11 @@ function setupModal(element){
 	if (element.getAttribute('type') == 'recipe'){
 		document.getElementById("modalFirst").textContent = "View Recipe";
 		document.getElementById("modalFirst").setAttribute("onclick","getRecipeInfo(selectedOption)");
+		document.getElementById('modalSecond').setAttribute("onclick","addAllToShopping(selectedOption)");
 	} else if (element.getAttribute('type') == 'liquid'){
 		document.getElementById("modalFirst").textContent = "Add to Cabinet";
 		document.getElementById("modalFirst").setAttribute("onclick","addToCabinet(selectedOption)");
+		document.getElementById("modalSecond").setAttribute("onclick","addToShopping(selectedOption)");
 	} else if (element.getAttribute('type') == 'cabinet'){
 		document.getElementById("modalFirst").textContent = "Remove from Cabinet List";
 		document.getElementById("modalFirst").setAttribute("onclick","removeFromCabinet(selectedOption)");
@@ -232,11 +234,34 @@ function addToCabinet(element){
 		tx.executeSql('UPDATE ALCOHOL SET OWNED = 1 WHERE LOWER(NAME) = LOWER(\'' + element.getAttribute("NAME")+'\')');
 	});
 }
+function addAllToShopping(element){
+	db.transaction(function(tx){
+		tx.executeSql("SELECT * FROM RECIPE WHERE LOWER(NAME) = LOWER(TRIM(?))", [element.getAttribute("NAME")], function(tx,results) {
+			tx.executeSql("SELECT A.ID FROM RECIPE R INNER JOIN INGREDIENT I ON R.ID = I.RECIPE_ID INNER JOIN ALCOHOL A ON I.ALCOHOL_ID=A.ID WHERE R.ID = " + results.rows[0].ID,
+				[],function(tx,results){
+					for (var i = 0; i < results.rows.length; i++){
+						tx.executeSql('UPDATE ALCOHOL SET SHOPLIST = 1 WHERE ID = ' + results.rows[i].ID);
+					}	
+				});
+		});
+	});
+}
+function addToShopping(element){
+	db.transaction(function(tx) {
+		tx.executeSql('UPDATE ALCOHOL SET SHOPLIST = 1 WHERE LOWER(NAME) = LOWER(\'' + element.getAttribute("NAME")+'\')');
+	});
+}
 function removeFromCabinet(element){
 	db.transaction(function(tx) {
 		tx.executeSql('UPDATE ALCOHOL SET OWNED = 0 WHERE LOWER(NAME) = LOWER(\'' + element.getAttribute("NAME")+'\')');
 	});
 	displayCabinet();
+}
+function removeFromShopping(element){
+	db.transaction(function(tx) {
+		tx.executeSql('UPDATE ALCOHOL SET SHOPLIST = 0 WHERE LOWER(NAME) = LOWER(\'' + element.getAttribute("NAME")+'\')');
+	});
+	displayShopping();
 }
 function displayCabinet(){
 	var element = document.getElementById('cabinet');
@@ -256,12 +281,36 @@ function displayCabinet(){
 		});
 	});
 }
-function search(text){
+function displayShopping(){
+	var element = document.getElementById('shopping');
+	element.clear();
+	db.transaction(function(tx){
+		tx.executeSql('SELECT * FROM ALCOHOL WHERE SHOPLIST = 1',[],function(tx,results){
+			for (var i = 0; i < results.rows.length; i++){
+				element.appendObj({ tag: 'input',
+									type: 'button',
+									class:['btn', 'btn-info'],
+									onclick:'removeFromShopping(this)',
+									NAME:results.rows[i].NAME})
+				element.appendObj({	tag:'span',
+									NAME:results.rows[i].NAME});
+				element.newLine();
+			}
+		});
+	});
+}
+function searchDrinks(text){
 	var element = document.getElementById('searchOutput');
 	element.clear();
+	var rndSQL = 'SELECT * FROM RECIPE WHERE NAME LIKE \'%'+text+'%\' ORDER BY NAME ASC';
+	if (getSetting('coSearch')=="true")
+		rndSQL = 'SELECT R.* FROM INGREDIENT AS I INNER JOIN ALCOHOL AS A ON I.ALCOHOL_ID = A.ID INNER JOIN RECIPE AS R ON I.RECIPE_ID = R.ID GROUP BY R.ID HAVING COUNT(*) = SUM(A.OWNED) ORDER BY NAME ASC';
+	
 	db.transaction(function(tx) {
-		tx.executeSql('SELECT * FROM RECIPE WHERE NAME LIKE \'%'+text+'%\'',[],function(tx, results){
+		tx.executeSql(rndSQL,[],function(tx, results){
 			for (var i = 0; i < results.rows.length; i++){
+				if (results.rows[i].NAME.match('.*'+text+'.*')==undefined)
+					continue;
 				element.appendObj({	tag:'button',
 									type:'recipe',
 									NAME:results.rows[i].NAME,
@@ -272,7 +321,13 @@ function search(text){
 				element.newLine();
 			}
 		});
-		tx.executeSql('SELECT * FROM ALCOHOL WHERE NAME LIKE \'%'+text+'%\'',[],function(tx,results){
+	});
+}
+function searchIngredients(text){
+	var element = document.getElementById('searchOutput');
+	element.clear();
+	db.transaction(function(tx) {
+		tx.executeSql('SELECT * FROM ALCOHOL WHERE NAME LIKE \'%'+text+'%\' ORDER BY NAME ASC',[],function(tx,results){
 			for (var i = 0; i < results.rows.length; i++){
 				element.appendObj({	tag:'button',
 									type:'liquid',
